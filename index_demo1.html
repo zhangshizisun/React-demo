@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<head>
+  <title>react</title>
+  <script src="js/react.development.js"></script>
+  <script src="js/react-dom.development.js"></script>
+  <script src="js/babel.min.js"></script>
+</head>
+
+<body>
+  <script type="text/babel">
+    const data = [
+      { category: "Sporting Goods", price: "$49.99", stocked: true, name: "Football" },
+      { category: "Sporting Goods", price: "$9.99", stocked: true, name: "Baseball" },
+      { category: "Sporting Goods", price: "$29.99", stocked: false, name: "Basketball" },
+      { category: "Electronics", price: "$99.99", stocked: true, name: "iPod Touch" },
+      { category: "Electronics", price: "$399.99", stocked: false, name: "iPhone 5" },
+      { category: "Electronics", price: "$199.99", stocked: true, name: "Nexus 7" }
+    ];
+
+    class FilterableProductTable extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { productlist: this.toMap(data), searchText: '', showFlag: false };
+      }
+
+      toMap(dataList) {
+        let productObj = {}
+        dataList.map((value, index) => {
+          let p = productObj[value.category]
+          if (p != null) {
+            productObj[value.category].push(value)
+          } else {
+            productObj[value.category] = [value]
+          }
+        })
+        return productObj
+      }
+
+      search = (e) => {
+        this.setState({ searchText: e.target.value });
+        this.upDateProductList({ "type": "search", value: e.target.value })
+      }
+
+      showStocked = () => {
+
+        const { showFlag } = this.state
+        this.setState({ showFlag: !showFlag });
+        this.upDateProductList({ "type": "flag", value: !showFlag })
+      }
+
+      upDateProductList(mutilObj) {
+        let { searchText, showFlag } = this.state
+        if (mutilObj['type'] == "search") {
+          searchText = mutilObj['value']
+        }
+
+        if (mutilObj['type'] == "flag") {
+          showFlag = mutilObj['value']
+        }
+
+        let tempList = []
+
+        data.map((p, index) => {
+          if (p.name.includes(searchText)) {
+            // tempList.push(p)
+            if (showFlag) {
+              if (p.stocked) {
+                tempList.push(p)
+              }
+            } else {
+              tempList.push(p)
+            }
+
+
+          }
+        })
+
+        this.setState({ productlist: this.toMap(tempList) })
+      }
+
+      render() {
+        const { productlist, searchText, showFlag } = this.state
+        return (
+          <div>
+            <SearchBar onSearch={this.search} onShowStocked={this.showStocked} value={searchText} flag={showFlag} />
+            <ProductTable productlist={productlist} value={showFlag} />
+          </div>
+        );
+      }
+    }
+
+    class SearchBar extends React.Component {
+      constructor(props) {
+        super(props);
+
+        this.state = {};
+
+      }
+
+      render() {
+        return (
+          <div>
+            <input type="search" placeholder="Search..." onChange={this.props.onSearch} value={this.props.searchText} /><br></br>
+            <input readOnly type="radio" id="btn1" checked={this.props.flag} onClick={this.props.onShowStocked} /><label htmlFor="btn1">Only show products in stock</label>
+          </div>
+        );
+      }
+    }
+
+    class ProductTable extends React.Component {
+      constructor(props) {
+        super(props);
+
+        this.state = {};
+        // this.productlist = new Map()
+
+      }
+
+      render() {
+
+        const { productlist } = this.props
+
+        let category = []
+        for (const key in productlist) {
+          category.push(key)
+        }
+
+        const pTable = category.map((value, index) => {
+          return (
+            <tr key={index.toString()}><td><ProductCategoryTable category={value} products={productlist[value]} /></td></tr>
+          )
+        })
+
+        return (
+          <div>
+            <table>
+              <thead>
+                <tr>
+                  <td>Name</td>
+                  <td>Price</td>
+                </tr>
+              </thead>
+              <tbody>
+                {pTable}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+    }
+
+    class ProductCategoryTable extends React.Component {
+      constructor(props) {
+        super(props);
+
+        this.state = {};
+
+      }
+
+      render() {
+        const { category, products } = this.props
+        const productTable = products.map((value, index) => {
+          return (
+            <tr key={index.toString()}>
+              <td style={{ color: !value.stocked ? 'red' : 'black' }}>{value.name}</td>
+              <td>{value.price}</td>
+            </tr>
+          )
+        })
+        return (
+          <table>
+            <thead>
+              <tr>
+                <td>{category}</td>
+              </tr>
+            </thead>
+            <tbody>
+              {productTable}
+            </tbody>
+          </table>
+        );
+      }
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'))
+    root.render(<FilterableProductTable />)
+
+  </script>
+  <div id="root"></div>
+  </script>
+
+</body>
+
+</html>
